@@ -1,6 +1,10 @@
+using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Advertisements;
 using UnityEngine.UI;
+using TMPro;
+using UnityEngine.Events;
 
 public enum InterstitialIdAds {
     Interstitial_Android,
@@ -17,6 +21,9 @@ public enum BannerIdAds {
 public class AdsManager : MonoBehaviour, IUnityAdsInitializationListener, IUnityAdsLoadListener, IUnityAdsShowListener
 {
     [SerializeField] Button _showAdButton;
+    [SerializeField] Image _errorBanner;
+    [SerializeField] Button _reloadBtn;
+    [SerializeField] Button _cancelBtn;
     [SerializeField] string _androidGameId;
     [SerializeField] string _iOSGameId;
     [SerializeField] InterstitialIdAds _androidAdUnitId;
@@ -31,15 +38,20 @@ public class AdsManager : MonoBehaviour, IUnityAdsInitializationListener, IUnity
     private string _adUnitIdRewarded;
     private string _adUnitIdBanner;
     private string _gameId;
+    private UnityAction buttonCallback;
  
-    void Awake()
-    {
+    void Awake(){
+        _cancelBtn.onClick.AddListener(()=> _errorBanner.gameObject.SetActive(false));
+
         _adUnitId = (Application.platform == RuntimePlatform.IPhonePlayer)? _iOSAdUnitId.ToString(): _androidAdUnitId.ToString();
         _adUnitIdRewarded = (Application.platform == RuntimePlatform.IPhonePlayer)? _iOSAdUnitIdRewarded.ToString(): _androidAdUnitIdRewarded.ToString();
         _adUnitIdBanner = (Application.platform == RuntimePlatform.IPhonePlayer)? _iOSAdUnitIdBanner.ToString(): _androidAdUnitIdBanner.ToString();
         _showAdButton.interactable = false;
+        _errorBanner.gameObject.SetActive(false);
         if(Advertisement.isInitialized) {
             LoadAd();
+            loadRewardedAd();
+            LoadBanner();
         } else {
             InitializeAds();
         }
@@ -55,18 +67,26 @@ public class AdsManager : MonoBehaviour, IUnityAdsInitializationListener, IUnity
     {
         // IMPORTANT! Only load content AFTER initialization (in this example, initialization is handled in a different script).
         Advertisement.Load(_adUnitId, this);
-        Advertisement.Load(_adUnitIdRewarded, this);
         LoadBanner();
+    }
+
+    public void loadRewardedAd() {
+        _showAdButton.interactable = false;
+        Advertisement.Load(_adUnitIdRewarded, this);
     }
  
     public void OnInitializationComplete()
     {
-        LoadAd();
+        // LoadAd();
+        loadRewardedAd();
+        LoadBanner();
     }
  
     public void OnInitializationFailed(UnityAdsInitializationError error, string message)
     {
         Debug.Log($"Unity Ads Initialization Failed: {error.ToString()} - {message}");
+        string mgs = $"Unity Ads Initialization Failed: {error.ToString()} - {message}";
+        HandledError(mgs, InitializeAds);
     }
 
     public void ShowAd()
@@ -80,9 +100,9 @@ public class AdsManager : MonoBehaviour, IUnityAdsInitializationListener, IUnity
     public void OnUnityAdsAdLoaded(string adUnitId)
     {
         // Optionally execute code if the Ad Unit successfully loads content.
-        if(adUnitId.Equals(_adUnitId)) {
-            ShowAd();
-        }
+        // if(adUnitId.Equals(_adUnitId)) {
+        //     ShowAd();
+        // }
         ConfigureBtnShowAd(adUnitId);
     }
  
@@ -90,12 +110,18 @@ public class AdsManager : MonoBehaviour, IUnityAdsInitializationListener, IUnity
     {
         Debug.Log($"Error loading Ad Unit: {adUnitId} - {error.ToString()} - {message}");
         // Optionally execute code if the Ad Unit fails to load, such as attempting to try again.
+        string mgs = $"Error loading Ad Unit: {adUnitId} - {error.ToString()} - {message}";
+        HandledError(adUnitId, mgs, loadRewardedAd);
     }
  
     public void OnUnityAdsShowFailure(string adUnitId, UnityAdsShowError error, string message)
     {
         Debug.Log($"Error showing Ad Unit {adUnitId}: {error.ToString()} - {message}");
         // Optionally execute code if the Ad Unit fails to show, such as loading another ad.
+        string mgs = $"Error showing Ad Unit {adUnitId}: {error.ToString()} - {message}";
+        HandledError(adUnitId, mgs, loadRewardedAd);
+
+        Time.timeScale = 1;
     }
 
     public void OnUnityAdsShowStart(string adUnitId)
@@ -112,7 +138,7 @@ public class AdsManager : MonoBehaviour, IUnityAdsInitializationListener, IUnity
     {
         GetRewarded(adUnitId, showCompletionState);
         Advertisement.Banner.Show(_adUnitIdBanner);
-        Time.timeScale = 0;
+        Time.timeScale = 1;
 
     }
 
@@ -136,14 +162,16 @@ public class AdsManager : MonoBehaviour, IUnityAdsInitializationListener, IUnity
         {
             // Grant a reward.
             CurrencyManager.Instance.updateCurrency(150,"Gold");
+            _showAdButton.onClick.RemoveListener(showAdRewarded);
             // Load another ad:
-            // Advertisement.Load(_adUnitIdRewarded, this);
+            Advertisement.Load(_adUnitIdRewarded, this);
         }
     }
 
     public void LoadBanner()
     {
         Advertisement.Banner.SetPosition(_bannerPosition);
+
         // Set up options to notify the SDK of load events:
         BannerLoadOptions options = new BannerLoadOptions
         {
@@ -158,7 +186,7 @@ public class AdsManager : MonoBehaviour, IUnityAdsInitializationListener, IUnity
     // Implement code to execute when the loadCallback event triggers:
     void OnBannerLoaded()
     {
-        // Advertisement.Banner.Show(_adUnitIdBanner);
+        Advertisement.Banner.Show(_adUnitIdBanner);
     }
  
     // Implement code to execute when the load errorCallback event triggers:
@@ -166,12 +194,49 @@ public class AdsManager : MonoBehaviour, IUnityAdsInitializationListener, IUnity
     {
         Debug.Log($"Banner Error: {message}");
         // Optionally execute additional code, such as attempting to load another ad.
+        LoadBanner();
     }
 
+    private void showErrorBanner(string ErrorMessage) {
+        _errorBanner.gameObject.SetActive(true);
+        _errorBanner.GetComponentInChildren<TextMeshProUGUI>().text = ErrorMessage;
+    }
+
+    private void addCallbackButton(UnityAction Callback) {
+         if( buttonCallback != null ) {
+            _reloadBtn.onClick.RemoveListener(buttonCallback);
+         }
+
+         buttonCallback = Callback;
+         _reloadBtn.onClick.AddListener(()=> {
+            buttonCallback();
+            _errorBanner.gameObject.SetActive(false);
+         });
+    }
+    private void HandledError(string message, UnityAction callback) {
+        showErrorBanner(message);
+        addCallbackButton(()=> {
+            callback();
+        });
+    }
+    private void HandledError(string adUnitId, string message, UnityAction callback) {
+        showErrorBanner(message);
+        addCallbackButton(()=> {
+            callback();
+        });
+
+        if(adUnitId.Equals(_adUnitIdRewarded) && adUnitId != null) {
+            if(_showAdButton.onClick != null) {
+                _showAdButton.onClick.RemoveListener(showAdRewarded);
+            }
+            _showAdButton.interactable = false;
+        }
+    }
 
     private void OnDestroy()
     {
         // Clean up the button listeners:
         _showAdButton.onClick.RemoveAllListeners();
     }
+
 }
