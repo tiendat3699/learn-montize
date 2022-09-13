@@ -9,7 +9,7 @@ public class textGold : MonoBehaviour
     private TextMeshProUGUI TextUI;
     private void Awake() {
         TextUI = GetComponent<TextMeshProUGUI>();
-        CurrencyManager.Instance.OnUpdateGold.AddListener((gold)=> {
+        CurrencyManager.Instance.OnUpdateCurrency.AddListener((gold, gem)=> {
             string goldText = gold <= 99999? gold.ToString():"99999+"; 
             TextUI.text = goldText;
         });

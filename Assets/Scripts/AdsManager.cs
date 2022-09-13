@@ -135,7 +135,7 @@ public class AdsManager : MonoBehaviour, IUnityAdsInitializationListener, IUnity
         if (adUnitId.Equals(_adUnitIdRewarded) && showCompletionState.Equals(UnityAdsShowCompletionState.COMPLETED))
         {
             // Grant a reward.
-            CurrencyManager.Instance.updateCurrency(150, "Gold");
+            CurrencyManager.Instance.updateCurrency(150,"Gold");
             // Load another ad:
             // Advertisement.Load(_adUnitIdRewarded, this);
         }

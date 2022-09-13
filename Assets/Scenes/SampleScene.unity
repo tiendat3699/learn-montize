@@ -1991,10 +1991,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db8e0b6a7fdaf52428ed8ddfec923e28, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  OnUpdateGold:
-    m_PersistentCalls:
-      m_Calls: []
-  OnUpdateGem:
+  OnUpdateCurrency:
     m_PersistentCalls:
       m_Calls: []
 --- !u!4 &568803956
@@ -5048,8 +5045,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 597189051}
   m_HandleRect: {fileID: 597189050}
   m_Direction: 2
-  m_Value: 1
-  m_Size: 0.8236754
+  m_Value: 0
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -6634,7 +6631,7 @@ MonoBehaviour:
   _androidAdUnitIdBanner: 0
   _iOSAdUnitIdBanner: 1
   _bannerPosition: 4
-  _testMode: 1
+  _testMode: 0
 --- !u!4 &2023938891
 Transform:
   m_ObjectHideFlags: 0

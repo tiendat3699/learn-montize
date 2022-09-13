@@ -8,8 +8,7 @@ public class CurrencyManager : MonoBehaviour
     public static CurrencyManager Instance;
     public double Gold {get; private set;} = 0;
     public double Gem {get; private set;} = 0;
-    [HideInInspector] public UnityEvent<double> OnUpdateGold;
-    [HideInInspector] public UnityEvent<double> OnUpdateGem;
+    public UnityEvent<double, double> OnUpdateCurrency;
 
     private void Awake() {
         if(Instance != null && Instance != this) {
@@ -34,13 +33,12 @@ public class CurrencyManager : MonoBehaviour
     public void updateCurrency(double quantity, string subtype) {
         if(subtype == "Gold") {
             Gold += quantity;
-            OnUpdateGold?.Invoke(Gold);
         }
 
         if(subtype == "Gem") {
             Gem += quantity;
-            OnUpdateGem?.Invoke(Gem);
         }
+        OnUpdateCurrency?.Invoke(Gold, Gem);
 
     }
 }
