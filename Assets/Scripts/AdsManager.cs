@@ -25,12 +25,12 @@ public class AdsManager : MonoBehaviour, IUnityAdsInitializationListener, IUnity
     [SerializeField] Button _reloadBtn;
     [SerializeField] Button _cancelBtn;
     [SerializeField] string _androidGameId;
-    [SerializeField] string _iOSGameId;
     [SerializeField] InterstitialIdAds _androidAdUnitId;
-    [SerializeField] InterstitialIdAds _iOSAdUnitId;
     [SerializeField] RewardedIdAds _androidAdUnitIdRewarded;
-    [SerializeField] RewardedIdAds _iOSAdUnitIdRewarded;
     [SerializeField] BannerIdAds _androidAdUnitIdBanner;
+    [SerializeField] string _iOSGameId;
+    [SerializeField] InterstitialIdAds _iOSAdUnitId;
+    [SerializeField] RewardedIdAds _iOSAdUnitIdRewarded;
     [SerializeField] BannerIdAds _iOSAdUnitIdBanner;
     [SerializeField] BannerPosition _bannerPosition = BannerPosition.BOTTOM_CENTER;
     [SerializeField] bool _testMode = true;
